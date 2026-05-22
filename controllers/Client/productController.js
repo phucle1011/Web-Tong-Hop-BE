@@ -1,0 +1,796 @@
+const Product = require("../../models/productsModel");
+const ProductVariant = require("../../models/productVariantsModel");
+const PromotionModel = require("../../models/promotionsModel");
+const PromotionProductModel = require("../../models/promotionProductsModel");
+const VariantImagesModel = require("../../models/variantImagesModel");
+const Brand = require("../../models/brandsModel");
+const Category = require("../../models/categoriesModel");
+const ProductVariantAttributeValuesModel = require("../../models/productVariantAttributeValuesModel");
+const ProductAttributeModel = require("../../models/productAttributesModel");
+const OrderDetail = require("../../models/orderDetailsModel");
+const Comment = require("../../models/commentsModel");
+const AuctionBidModel = require("../../models/auctionBidsModel");
+const AuctionModel = require("../../models/auctionsModel");
+const UserModel = require("../../models/usersModel");
+
+const { Op, fn, col, literal, Sequelize } = require("sequelize");
+
+class ProductController {
+  static async getNonAuctionVariantsWithPromotion(req, res) {
+    try {
+      const Slug = req.params.slug;
+      const now = new Date();
+
+      const product = await Product.findOne({
+        where: {
+          slug: Slug,
+          publication_status: "published",
+          status: 1,
+        },
+        include: [
+          { model: Brand, as: "brand", attributes: ["id", "name"] },
+          { model: Category, as: "category", attributes: ["id", "name"] },
+          {
+            model: ProductVariant,
+            as: "variants",
+            // 🔵 CHỈ lấy biến thể KHÔNG đấu giá
+            where: { is_auction_only: 0 },
+            required: false, // có thể cho phép rỗng, tuỳ UX (đổi true nếu muốn 404 khi rỗng)
+            include: [
+              {
+                model: VariantImagesModel,
+                as: "images",
+                attributes: ["id", "image_url", "variant_id"],
+              },
+              {
+                model: PromotionProductModel,
+                as: "promotionProducts",
+                required: false,
+                include: [
+                  {
+                    model: PromotionModel,
+                    as: "promotion",
+                    where: {
+                      applicable_to: "product",
+                      start_date: { [Op.lte]: now },
+                      end_date: { [Op.gte]: now },
+                      status: "active",
+                    },
+                    required: false,
+                  },
+                ],
+              },
+              {
+                model: ProductVariantAttributeValuesModel,
+                as: "attributeValues",
+                include: [
+                  {
+                    model: ProductAttributeModel,
+                    as: "attribute",
+                    attributes: ["id", "name"],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        order: [["created_at", "DESC"]],
+      });
+
+      if (!product) {
+        return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+      }
+
+      const variantImages = [];
+      const nonAuctionVariantIds = (product.variants || []).map((v) => v.id);
+
+      // ✅ Tính đánh giá CHỈ cho các variant không đấu giá
+      let averageRating = "0.0";
+      let ratingCount = 0;
+      const ratingMap = {};
+
+      if (nonAuctionVariantIds.length > 0) {
+        const ratingData = await Comment.findAll({
+          where: { parent_id: null }, // 🔴 CHỈ tính đánh giá gốc
+          include: [
+            {
+              model: OrderDetail,
+              as: "orderDetail",
+              attributes: ["product_variant_id"],
+              where: { product_variant_id: { [Op.in]: nonAuctionVariantIds } },
+              required: true,
+            },
+          ],
+          attributes: [
+            [col("orderDetail.product_variant_id"), "variantId"],
+            [fn("AVG", col("rating")), "avgRating"],
+            [fn("COUNT", col("rating")), "ratingCount"],
+          ],
+          group: ["orderDetail.product_variant_id"],
+          raw: true,
+        });
+
+        ratingData.forEach((item) => {
+          const variantId = item.variantId;
+          ratingMap[variantId] = {
+            avgRating: parseFloat(item.avgRating || 0).toFixed(1),
+            ratingCount: parseInt(item.ratingCount || 0, 10),
+          };
+        });
+
+        const total = ratingData.reduce(
+          (acc, cur) => {
+            const count = parseInt(cur.ratingCount || 0, 10);
+            const avg = parseFloat(cur.avgRating || 0);
+            acc.sum += avg * count;
+            acc.count += count;
+            return acc;
+          },
+          { sum: 0, count: 0 }
+        );
+
+        averageRating =
+          total.count > 0 ? (total.sum / total.count).toFixed(1) : "0.0";
+        ratingCount = total.count;
+      }
+
+      const variants = (product.variants || []).map((variant) => {
+        if (variant.images?.length) {
+          variant.images.forEach((img) => {
+            variantImages.push({
+              id: img.id,
+              image_url: img.image_url,
+              variant_id: variant.id,
+            });
+          });
+        }
+
+        const variantPrice = parseFloat(variant.price) || 0;
+        let bestPromotion = null;
+        let finalPrice = variantPrice;
+
+       const promotions = variant.promotionProducts || [];
+if (promotions.length > 0) {
+  bestPromotion = promotions.reduce((best, promoProduct) => {
+    const promo = promoProduct.promotion;
+    if (!promo) return best;
+
+    // ✅ Nếu variant_quantity = 0 thì bỏ qua
+    if (promoProduct.variant_quantity !== null && promoProduct.variant_quantity <= 0) {
+      return best;
+    }
+
+    let tmpPrice = variantPrice;
+    let tmpPercent = 0;
+
+    if (promo.discount_type === "percentage") {
+      const discountPercent = parseFloat(promo.discount_value);
+      let discountAmount = (variantPrice * discountPercent) / 100;
+
+      // Áp dụng giới hạn max_price nếu có
+      if (promo.max_price != null && !isNaN(promo.max_price)) {
+        discountAmount = Math.min(discountAmount, parseFloat(promo.max_price));
+      }
+
+      tmpPrice -= discountAmount;
+      tmpPercent = (discountAmount / variantPrice) * 100;
+    } else {
+      const fixedDiscount = parseFloat(promo.discount_value);
+      tmpPrice -= fixedDiscount;
+      tmpPercent = variantPrice > 0 ? (fixedDiscount / variantPrice) * 100 : 0;
+    }
+
+    tmpPrice = Math.max(0, tmpPrice);
+
+    const promoData = {
+      id: promo.id,
+      code: promo.code,
+      discount_type: promo.discount_type,
+      discount_value: parseFloat(promo.discount_value),
+      discounted_price: parseFloat(tmpPrice.toFixed(2)),
+      discount_percent: parseFloat(tmpPercent.toFixed(2)),
+      meets_conditions: promo.quantity == null || promo.quantity > 0
+    };
+
+    if (
+      !best ||
+      (promoData.meets_conditions &&
+        promoData.discounted_price < best.discounted_price)
+    ) {
+      return promoData;
+    }
+    return best;
+  }, null);
+
+  if (bestPromotion && bestPromotion.meets_conditions) {
+    finalPrice = bestPromotion.discounted_price;
+  }
+}
+
+
+        const ratingInfo = ratingMap[variant.id] || {
+          avgRating: "0.0",
+          ratingCount: 0,
+        };
+
+        return {
+          id: variant.id,
+          // name: variant.name, // nếu không có field name thì bỏ
+          price: variantPrice,
+          stock: variant.stock,
+          sku: variant.sku,
+          is_auction_only: variant.is_auction_only, // luôn = 0 ở đây
+          images: variant.images,
+          attributeValues: variant.attributeValues,
+          final_price: bestPromotion ? finalPrice : null,
+          promotion: bestPromotion || {
+            discounted_price: variantPrice,
+            discount_percent: 0,
+            meets_conditions: true,
+          },
+          averageRating: ratingInfo.avgRating,
+          ratingCount: ratingInfo.ratingCount,
+        };
+      });
+
+      return res.json({
+        product: {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          short_description: product.short_description,
+          price: product.price,
+          brand: product.brand?.name || null,
+          category: product.category?.name || null,
+          thumbnail: product.thumbnail,
+          variants, // ✅ chỉ chứa biến thể is_auction_only = 0
+          variantImages, // flattened nếu FE cần
+          averageRating,
+          ratingCount,
+        },
+      });
+    } catch (err) {
+      console.error("Lỗi khi lấy biến thể thường:", err);
+      res.status(500).json({ message: "Đã xảy ra lỗi khi lấy dữ liệu" });
+    }
+  }
+  static async getAuctionVariants(req, res) {
+    try {
+      const Slug = req.params.slug;
+      const now = new Date();
+
+      // Lấy product đã xuất bản, còn hiển thị
+      const product = await Product.findOne({
+        where: {
+          slug: Slug,
+          publication_status: "published",
+          status: 1,
+        },
+        include: [
+          { model: Brand, as: "brand", attributes: ["id", "name"] },
+          { model: Category, as: "category", attributes: ["id", "name"] },
+          {
+            // 🔴 CHỈ lấy biến thể đang đấu giá
+            model: ProductVariant,
+            as: "variants",
+            where: { is_auction_only: 1 },
+            required: true,
+            include: [
+              {
+                model: AuctionModel,
+                as: "auctions",
+                separate: true,
+                order: [["end_time", "DESC"]],
+                include: [
+                  {
+                    model: AuctionBidModel,
+                    as: "bids",
+                    required: false,
+                    order: [
+                      ["bidAmount", "DESC"],
+                      ["created_at", "ASC"],
+                    ],
+                    include: [
+                      {
+                        model: UserModel,
+                        as: "user",
+                        attributes: ["id", "name"],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                model: VariantImagesModel,
+                as: "images",
+                attributes: ["id", "image_url", "variant_id"],
+              },
+              {
+                // Khuyến mãi áp cho từng biến thể
+                model: PromotionProductModel,
+                as: "promotionProducts",
+                include: [
+                  {
+                    model: PromotionModel,
+                    as: "promotion",
+                    where: {
+                      applicable_to: "product",
+                      start_date: { [Op.lte]: now },
+                      end_date: { [Op.gte]: now },
+                      status: "active",
+                    },
+                    required: false,
+                  },
+                ],
+                required: false,
+              },
+              {
+                // Thuộc tính biến thể
+                model: ProductVariantAttributeValuesModel,
+                as: "attributeValues",
+                include: [
+                  {
+                    model: ProductAttributeModel,
+                    as: "attribute",
+                    attributes: ["id", "name"],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        order: [["created_at", "DESC"]],
+      });
+
+      if (!product) {
+        return res.status(404).json({
+          message: "Không tìm thấy sản phẩm hoặc không có biến thể đấu giá.",
+        });
+      }
+
+      // Danh sách variantId để tính rating hiệu quả hơn
+      const auctionVariantIds = (product.variants || []).map((v) => v.id);
+      if (auctionVariantIds.length === 0) {
+        return res.status(200).json({
+          product: {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            short_description: product.short_description,
+            price: product.price,
+            brand: {
+              id: product.brand?.id || null,
+              name: product.brand?.name || null,
+            },
+            category: {
+              id: product.category?.id || null,
+              name: product.category?.name || null,
+            },
+            thumbnail: product.thumbnail,
+            variants: [],
+            variantImages: [],
+            averageRating: "0.0",
+            ratingCount: 0,
+          },
+        });
+      }
+
+      // ✅ Tính rating chỉ cho các biến thể đấu giá
+      const ratingData = await Comment.findAll({
+        include: [
+          {
+            model: OrderDetail,
+            as: "orderDetail",
+            attributes: ["product_variant_id"],
+            where: { product_variant_id: { [Op.in]: auctionVariantIds } },
+            required: true,
+          },
+        ],
+        attributes: [
+          [col("orderDetail.product_variant_id"), "variantId"],
+          [fn("AVG", col("rating")), "avgRating"],
+          [fn("COUNT", col("rating")), "ratingCount"],
+        ],
+        group: ["orderDetail.product_variant_id"],
+        raw: true,
+      });
+
+      const ratingMap = {};
+      ratingData.forEach((item) => {
+        const variantId = item.variantId;
+        ratingMap[variantId] = {
+          avgRating: parseFloat(item.avgRating || 0).toFixed(1),
+          ratingCount: parseInt(item.ratingCount || 0, 10),
+        };
+      });
+
+      // Tính rating tổng cho trang chi tiết
+      const totalRatingAgg = ratingData.reduce(
+        (acc, cur) => {
+          const count = parseInt(cur.ratingCount || 0, 10);
+          const avg = parseFloat(cur.avgRating || 0);
+          acc.sum += avg * count;
+          acc.count += count;
+          return acc;
+        },
+        { sum: 0, count: 0 }
+      );
+
+      const averageRating =
+        totalRatingAgg.count > 0
+          ? (totalRatingAgg.sum / totalRatingAgg.count).toFixed(1)
+          : "0.0";
+      const ratingCount = totalRatingAgg.count;
+
+      // Gom ảnh biến thể (dùng nếu front-end cần danh sách phẳng)
+      const variantImages = [];
+      const variants = product.variants.map((variant) => {
+        if (variant.images?.length) {
+          variant.images.forEach((img) => {
+            variantImages.push({
+              id: img.id,
+              image_url: img.image_url,
+              variant_id: variant.id,
+            });
+          });
+        }
+
+        const auctions = (variant.auctions || []).map((auction) => {
+          let winner = null;
+          if (
+            auction?.status === "ended" &&
+            Array.isArray(auction.bids) &&
+            auction.bids.length > 0
+          ) {
+            const topBid = auction.bids[0];
+            winner = {
+              user_id: topBid.user_id,
+              user_name: topBid.user?.name || null,
+              bidAmount: Number(topBid.bidAmount),
+              bidTime: topBid.bidTime,
+            };
+          }
+
+          return {
+            id: auction.id,
+            status: auction.status,
+            startTime: auction.start_time,
+            endTime: auction.end_time,
+            winner,
+          };
+        });
+
+        // ✅ Tính khuyến mãi tốt nhất cho biến thể
+        const variantPrice = parseFloat(variant.price) || 0;
+        let bestPromotion = null;
+        let finalPrice = variantPrice;
+
+        const promotions = variant.promotionProducts || [];
+        if (promotions.length > 0) {
+          bestPromotion = promotions.reduce((best, promoProduct) => {
+            const promo = promoProduct.promotion;
+            if (!promo) return best;
+
+            let tmpPrice = variantPrice;
+            let tmpPercent = 0;
+
+            if (promo.discount_type === "percentage") {
+              tmpPrice -= (tmpPrice * parseFloat(promo.discount_value)) / 100;
+              tmpPercent = parseFloat(promo.discount_value);
+            } else {
+              tmpPrice -= parseFloat(promo.discount_value);
+              tmpPercent =
+                variantPrice > 0
+                  ? ((variantPrice - tmpPrice) / variantPrice) * 100
+                  : 0;
+            }
+
+            tmpPrice = Math.max(0, tmpPrice);
+
+            const promoData = {
+              id: promo.id,
+              code: promo.code,
+              discount_type: promo.discount_type,
+              discount_value: parseFloat(promo.discount_value),
+              discounted_price: parseFloat(tmpPrice.toFixed(2)),
+              discount_percent: parseFloat(tmpPercent.toFixed(2)),
+              meets_conditions: promo.quantity == null || promo.quantity > 0,
+            };
+
+            if (
+              !best ||
+              (promoData.meets_conditions &&
+                promoData.discounted_price < best.discounted_price)
+            ) {
+              return promoData;
+            }
+            return best;
+          }, null);
+
+          if (bestPromotion && bestPromotion.meets_conditions) {
+            finalPrice = bestPromotion.discounted_price;
+          }
+        }
+
+        const ratingInfo = ratingMap[variant.id] || {
+          avgRating: "0.0",
+          ratingCount: 0,
+        };
+
+        return {
+          id: variant.id,
+          // name: variant.name, // nếu variant không có field name thì bỏ
+          price: variantPrice,
+          stock: variant.stock,
+          sku: variant.sku,
+          is_auction_only: variant.is_auction_only, // luôn = 1 ở đây
+          images: variant.images,
+          attributeValues: variant.attributeValues,
+          final_price: bestPromotion ? finalPrice : null,
+          promotion: bestPromotion || {
+            discounted_price: variantPrice,
+            discount_percent: 0,
+            meets_conditions: true,
+          },
+          averageRating: ratingInfo.avgRating,
+          ratingCount: ratingInfo.ratingCount,
+          auctions,
+        };
+      });
+
+      return res.json({
+        product: {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          short_description: product.short_description,
+          price: product.price,
+          brand: {
+            id: product.brand?.id || null,
+            name: product.brand?.name || null,
+          },
+          category: {
+            id: product.category?.id || null,
+            name: product.category?.name || null,
+          },
+          thumbnail: product.thumbnail,
+          variants, // ✅ chỉ có các biến thể is_auction_only = 1
+          variantImages, // phẳng (nếu front cần)
+          averageRating,
+          ratingCount,
+        },
+      });
+    } catch (err) {
+      console.error("Lỗi khi lấy biến thể đấu giá:", err);
+      res.status(500).json({ message: "Đã xảy ra lỗi khi lấy dữ liệu" });
+    }
+  }
+
+  static async getSimilarProducts(req, res) {
+  try {
+    const Slug = req.params.slug;
+
+    const baseProduct = await Product.findOne({
+      where: { slug: Slug, status: 1, publication_status: "published" },
+      attributes: ["id", "category_id", "brand_id"],
+    });
+
+    if (!baseProduct) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+
+    const now = new Date();
+    const whereCommon = {
+      slug: { [Op.ne]: Slug },
+      status: 1,
+      publication_status: "published",
+    };
+
+    const buildQuery = (extraWhere) => ({
+      where: { ...whereCommon, ...extraWhere },
+      include: [
+        {
+          model: ProductVariant,
+          as: "variants",
+          required: true,
+          attributes: ["id", "price", "stock", "is_auction_only","sku"],
+          where: { is_auction_only: false },
+          include: [
+            {
+              model: ProductVariantAttributeValuesModel,
+              as: "attributeValues",
+              include: [{ model: ProductAttributeModel, as: "attribute" }],
+            },
+            { model: VariantImagesModel, as: "images" },
+            {
+              model: PromotionProductModel,
+              as: "promotionProducts",
+              required: false,
+              attributes: ['id', 'variant_quantity'],
+              include: [
+                {
+                  model: PromotionModel,
+                  as: "promotion",
+                  required: false,
+                  where: {
+                    status: { [Op.or]: ["active", "ACTIVE", 1, true] },
+                    start_date: { [Op.lte]: now },
+                    end_date: { [Op.gte]: now },
+                  },
+                  attributes: [
+                    "id", "code", "name", "discount_type", "discount_value",
+                    "quantity", "start_date", "end_date", "status", "max_price"
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      attributes: ["id", "name", "thumbnail", "createdAt","slug"],
+      limit: 6,
+    });
+
+    let similarProducts = await Product.findAll(
+      buildQuery({ category_id: baseProduct.category_id, brand_id: baseProduct.brand_id })
+    );
+
+    if (!similarProducts.length) {
+      similarProducts = await Product.findAll(buildQuery({ category_id: baseProduct.category_id }));
+    }
+
+    if (!similarProducts.length) {
+      similarProducts = await Product.findAll(buildQuery({ brand_id: baseProduct.brand_id }));
+    }
+
+    if (!similarProducts.length) {
+      similarProducts = await Product.findAll({
+        where: whereCommon,
+        include: buildQuery({}).include,
+        attributes: ["id", "name", "thumbnail", "createdAt"],
+        order: Sequelize.literal("RAND()"),
+        limit: 6,
+      });
+    }
+
+    const productsWithDetails = similarProducts.map(p => {
+      const pj = p.toJSON();
+      pj.created_at = pj.createdAt;
+      delete pj.createdAt;
+
+      const variants = pj.variants || [];
+
+      pj.variantCount = variants.length;
+      pj.total_stock = variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
+
+      for (const v of variants) {
+        const price = parseFloat(v.price) || 0;
+
+        const best = (v.promotionProducts || []).reduce((best, pp) => {
+          const promo = pp?.promotion;
+          if (!promo) return best;
+          if (pp.variant_quantity !== null && pp.variant_quantity <= 0) return best;
+
+          const cap = promo.max_price != null ? Math.max(0, parseFloat(promo.max_price) || 0) : null;
+
+          let discountAmount = 0;
+          if (promo.discount_type === "percentage") {
+            const pct = Math.max(0, Math.min(100, parseFloat(promo.discount_value) || 0));
+            const raw = price * (pct / 100);
+            discountAmount = cap != null ? Math.min(raw, cap) : raw;
+          } else if (promo.discount_type === "fixed") {
+            const fixed = Math.max(0, parseFloat(promo.discount_value) || 0);
+            const raw = Math.min(fixed, price);
+            discountAmount = cap != null ? Math.min(raw, cap) : raw;
+          }
+
+          discountAmount = Math.min(discountAmount, price);
+          const finalPrice = Math.max(0, price - discountAmount);
+          const percent = price > 0 ? (discountAmount / price) * 100 : 0;
+
+          const info = {
+            id: promo.id,
+            code: promo.code,
+            name: promo.name,
+            discount_type: promo.discount_type,
+            discount_value: parseFloat(promo.discount_value),
+            start_date: promo.start_date,
+            end_date: promo.end_date,
+            max_price: promo.max_price != null ? Number(promo.max_price) : null,
+            discounted_price: Number(finalPrice.toFixed(2)),
+            discount_amount: Number(discountAmount.toFixed(2)),
+            discount_percent: Number(percent.toFixed(2)),
+            meets_conditions: promo.quantity == null || promo.quantity > 0,
+            variant_quantity_left: pp.variant_quantity
+          };
+
+          if (!best || (info.meets_conditions && info.discounted_price < best.discounted_price)) {
+            return info;
+          }
+
+          return best;
+        }, null);
+
+        const lowest = best?.discounted_price ?? price;
+        const percent = best?.discount_percent ?? 0;
+
+        v.promotion = best || {
+          discounted_price: lowest,
+          discount_percent: percent,
+          discount_amount: 0,
+          meets_conditions: false
+        };
+      }
+
+      return pj;
+    });
+
+    const allVariantIds = productsWithDetails.flatMap((p) => p.variants?.map((v) => v.id) || []);
+    let ratingMap = {};
+
+    if (allVariantIds.length) {
+      const ratingData = await Comment.findAll({
+        where: { parent_id: null },
+        include: [
+          {
+            model: OrderDetail,
+            as: "orderDetail",
+            attributes: ["product_variant_id"],
+            where: { product_variant_id: { [Op.in]: allVariantIds } },
+            required: true,
+          },
+        ],
+        attributes: [
+          [col("orderDetail.product_variant_id"), "variantId"],
+          [fn("AVG", col("rating")), "avgRating"],
+          [fn("COUNT", col("rating")), "ratingCount"],
+        ],
+        group: ["orderDetail.product_variant_id"],
+        raw: true,
+      });
+
+      ratingMap = ratingData.reduce((acc, r) => {
+        acc[r.variantId] = {
+          avgRating: parseFloat(r.avgRating || 0).toFixed(1),
+          ratingCount: parseInt(r.ratingCount || 0, 10),
+        };
+        return acc;
+      }, {});
+    }
+
+    for (const p of productsWithDetails) {
+      for (const v of p.variants || []) {
+        const rating = ratingMap[v.id] || { avgRating: "0.0", ratingCount: 0 };
+        v.averageRating = rating.avgRating;
+        v.ratingCount = rating.ratingCount;
+      }
+    }
+
+    const totalVariants = productsWithDetails.reduce(
+      (sum, p) => sum + (p.variants?.length || 0),
+      0
+    );
+
+    return res.status(200).json({
+      status: 200,
+      message: "Lấy sản phẩm tương tự thành công",
+      data: productsWithDetails,
+      pagination: {
+        currentPage: 1,
+        limit: 6,
+        totalPages: 1,
+        totalProducts: productsWithDetails.length,
+      },
+      totalVariants,
+    });
+  } catch (err) {
+    console.error("Lỗi khi lấy sản phẩm tương tự:", err);
+    res.status(500).json({ message: "Đã xảy ra lỗi khi lấy sản phẩm tương tự" });
+  }
+}
+
+
+
+}
+
+module.exports = ProductController;
