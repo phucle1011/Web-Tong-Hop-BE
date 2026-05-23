@@ -5,7 +5,6 @@ const { Op } = require("sequelize");
 class AddressController {
   static async getAddressesByUser(req, res) {
     const userId = req.params.id;
-
     try {
       const addresses = await AddressModel.findAll({
         where: { user_id: userId },
@@ -21,14 +20,10 @@ class AddressController {
           ["created_at", "DESC"],
         ],
       });
-
       return res.status(200).json({ success: true, data: addresses });
     } catch (error) {
       console.error("Error in getAddressesByUser:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Lỗi server khi lấy địa chỉ theo user",
-      });
+      return res.status(500).json({ success: false, message: "Lỗi server khi lấy địa chỉ theo user" });
     }
   }
 
@@ -36,19 +31,15 @@ class AddressController {
     const user_id = req.params.userId;
     const {
       address_line = "",
-      district = "",
-      province = "",
+      ward = "",       // phường/xã
+      province = "",   // tỉnh/thành
       is_default = false,
     } = req.body;
 
-    if (
-      address_line.trim() === "" ||
-      district.trim() === "" ||
-      province.trim() === "" 
-    ) {
+    if (!address_line.trim() || !ward.trim() || !province.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu dữ liệu bắt buộc: address_line,  district, province",
+        message: "Thiếu dữ liệu bắt buộc: address_line, ward, province",
       });
     }
 
@@ -60,7 +51,7 @@ class AddressController {
       const newAddress = await AddressModel.create({
         user_id,
         address_line,
-        district,
+        ward,
         province,
         is_default: !!is_default,
       });
@@ -68,9 +59,7 @@ class AddressController {
       return res.status(201).json({ success: true, data: newAddress });
     } catch (error) {
       console.error("Error in addAddress:", error);
-      return res
-        .status(500)
-        .json({ success: false, message: "Lỗi server khi thêm địa chỉ" });
+      return res.status(500).json({ success: false, message: "Lỗi server khi thêm địa chỉ" });
     }
   }
 
@@ -79,7 +68,7 @@ class AddressController {
     const address_id = req.params.id;
     const {
       address_line = "",
-      district = "",
+      ward = "",
       province = "",
       is_default = false,
     } = req.body;
@@ -94,18 +83,13 @@ class AddressController {
       if (is_default) {
         await AddressModel.update(
           { is_default: false },
-          {
-            where: {
-              user_id,
-              id: { [Op.ne]: address_id },
-            },
-          }
+          { where: { user_id, id: { [Op.ne]: address_id } } }
         );
       }
 
       await address.update({
         address_line,
-        district,
+        ward,
         province,
         is_default: !!is_default,
       });
@@ -113,9 +97,7 @@ class AddressController {
       return res.status(200).json({ success: true, data: address });
     } catch (error) {
       console.error("Error in updateAddress:", error);
-      return res
-        .status(500)
-        .json({ success: false, message: "Lỗi server khi cập nhật địa chỉ" });
+      return res.status(500).json({ success: false, message: "Lỗi server khi cập nhật địa chỉ" });
     }
   }
 
@@ -131,13 +113,10 @@ class AddressController {
       }
 
       await address.destroy();
-
       return res.status(200).json({ success: true, message: "Đã xoá địa chỉ" });
     } catch (error) {
       console.error("Error in deleteAddress:", error);
-      return res
-        .status(500)
-        .json({ success: false, message: "Lỗi server khi xoá địa chỉ" });
+      return res.status(500).json({ success: false, message: "Lỗi server khi xoá địa chỉ" });
     }
   }
 }

@@ -124,15 +124,18 @@ router.post('/shipping/shipping-fee', ShippingController.calculateShippingFee);
 
 //------------------[ AUTH ]------------------\
 router.post('/auth/register', AuthController.register);
+router.post('/auth/reset-password', AuthController.resetPassword);       // Bước 1: Gửi OTP
+router.post('/auth/verify-reset-otp', AuthController.verifyResetOTP);   // Bước 2: Xác thực OTP
+router.post('/auth/update-password', AuthController.updatePassword);  
 router.get('/auth/verify-email', AuthController.verifyEmail);
 router.post('/auth/login', AuthController.login);
 router.post('/auth/google', AuthController.googleLogin);
 router.post('/auth/check-token', AuthController.checkToken);
 router.post('/auth/update-verification', AuthController.updateVerification);
-router.post('/auth/reset-password', AuthController.resetPassword);
-router.post('/auth/update-password/:token', AuthController.updatePassword);
+// router.post('/auth/reset-password', AuthController.resetPassword);
+// router.post('/auth/update-password/:token', AuthController.updatePassword);
 router.get('/users/:id', AuthController.getById);
-router.put('/users/:id', AuthController.update);
+// router.put('/users/:id', AuthController.update);
 
 router.get("/profile/order-stats/:id", ProfileController.getOrderStats);
 router.get("/profile/new-orders/:id", ProfileController.getTotalNewOrders);

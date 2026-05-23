@@ -12,6 +12,7 @@ const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(CLIENT_ID);
 const { v4: uuidv4 } = require("uuid");
 
+const otpStore = new Map();
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
@@ -77,7 +78,7 @@ class AuthController {
                 status: "active"
             });
 
-            await sendVerificationEmail(email, verifyToken);
+            // await sendVerificationEmail(email, verifyToken);
 
             return successResponse(res, "Đăng ký thành công! Vui lòng kiểm tra email để xác thực.", {
                 id: user.id,
@@ -351,35 +352,35 @@ class AuthController {
     }
 
     //-------------------[ RESET PASSWORD ]--------------------------
-    static async resetPassword(req, res) {
-        const { email } = req.body;
-        try {
-            const user = await UserModel.findOne({ where: { email } });
-            if (!user) {
-                return errorResponse(res, "Email không tồn tại!", 404);
-            }
+    // static async resetPassword(req, res) {
+    //     const { email } = req.body;
+    //     try {
+    //         const user = await UserModel.findOne({ where: { email } });
+    //         if (!user) {
+    //             return errorResponse(res, "Email không tồn tại!", 404);
+    //         }
 
-            if (user.status === 'locked') {
-                return errorResponse(res, "Tài khoản bị khóa, không thể đặt lại mật khẩu!", 403);
-            }
+    //         if (user.status === 'locked') {
+    //             return errorResponse(res, "Tài khoản bị khóa, không thể đặt lại mật khẩu!", 403);
+    //         }
 
-            const token = jwt.sign(
-                { email: user.email, id: user.id },
-                JWT_SECRET,
-                { expiresIn: "1h" }
-            );
+    //         const token = jwt.sign(
+    //             { email: user.email, id: user.id },
+    //             JWT_SECRET,
+    //             { expiresIn: "1h" }
+    //         );
 
-            await user.update({ password_reset_token: token });
+    //         await user.update({ password_reset_token: token });
 
-            const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
-            await sendResetPassword(email, resetLink);
+    //         const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
+    //         await sendResetPassword(email, resetLink);
 
-            return successResponse(res, "Kiểm tra email để đặt lại mật khẩu!", null, 200);
-        } catch (error) {
-            console.error("Lỗi xảy ra khi reset password:", error);
-            return errorResponse(res, "Lỗi server, vui lòng thử lại!", 500);
-        }
-    }
+    //         return successResponse(res, "Kiểm tra email để đặt lại mật khẩu!", null, 200);
+    //     } catch (error) {
+    //         console.error("Lỗi xảy ra khi reset password:", error);
+    //         return errorResponse(res, "Lỗi server, vui lòng thử lại!", 500);
+    //     }
+    // }
 
     static async updatePassword(req, res) {
         const { token } = req.params;
@@ -449,63 +450,150 @@ class AuthController {
         }
     }
 
-    static async update(req, res) {
-        try {
-            const { id } = req.params;
-            const { name, phone, avatar, email } = req.body;
+    // static async update(req, res) {
+    //     try {
+    //         const { id } = req.params;
+    //         const { name, phone, avatar, email } = req.body;
 
-            if (!id || isNaN(id)) {
-                return errorResponse(res, "ID không hợp lệ!", 400);
-            }
+    //         if (!id || isNaN(id)) {
+    //             return errorResponse(res, "ID không hợp lệ!", 400);
+    //         }
 
-            const user = await UserModel.findByPk(id);
-            if (!user) {
-                return errorResponse(res, "Không tìm thấy người dùng!", 404);
-            }
+    //         const user = await UserModel.findByPk(id);
+    //         if (!user) {
+    //             return errorResponse(res, "Không tìm thấy người dùng!", 404);
+    //         }
 
-            // Kiểm tra số điện thoại không trùng
-            if (phone) {
-                const phoneExists = await UserModel.findOne({
-                    where: {
-                        phone,
-                        id: { [Op.ne]: id } // loại trừ user đang cập nhật
-                    }
-                });
-                if (phoneExists) {
-                    return errorResponse(res, "Số điện thoại này đã được sử dụng!", 400);
-                }
-            }
+    //         // Kiểm tra số điện thoại không trùng
+    //         if (phone) {
+    //             const phoneExists = await UserModel.findOne({
+    //                 where: {
+    //                     phone,
+    //                     id: { [Op.ne]: id } // loại trừ user đang cập nhật
+    //                 }
+    //             });
+    //             if (phoneExists) {
+    //                 return errorResponse(res, "Số điện thoại này đã được sử dụng!", 400);
+    //             }
+    //         }
 
-            // Kiểm tra tên
-            if (name) {
-                const trimmedName = name.trim();
-                const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/;
-                if (trimmedName.length < 2 || trimmedName.length > 50 || !nameRegex.test(trimmedName)) {
-                    return errorResponse(res, "Tên không hợp lệ!", 400);
-                }
-            }
+    //         // Kiểm tra tên
+    //         if (name) {
+    //             const trimmedName = name.trim();
+    //             const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/;
+    //             if (trimmedName.length < 2 || trimmedName.length > 50 || !nameRegex.test(trimmedName)) {
+    //                 return errorResponse(res, "Tên không hợp lệ!", 400);
+    //             }
+    //         }
 
-            // Kiểm tra email hợp lệ
-            if (email) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    return errorResponse(res, "Email không hợp lệ!", 400);
-                }
-            }
+    //         // Kiểm tra email hợp lệ
+    //         if (email) {
+    //             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    //             if (!emailRegex.test(email)) {
+    //                 return errorResponse(res, "Email không hợp lệ!", 400);
+    //             }
+    //         }
 
-            await user.update({
-                name: name || user.name,
-                phone: phone || user.phone,
-                avatar: avatar || user.avatar,
-                email: email || user.email
-            });
+    //         await user.update({
+    //             name: name || user.name,
+    //             phone: phone || user.phone,
+    //             avatar: avatar || user.avatar,
+    //             email: email || user.email
+    //         });
 
-            return successResponse(res, "Cập nhật thông tin người dùng thành công!", null, 200);
-        } catch (error) {
-            console.error("Lỗi khi cập nhật người dùng:", error);
-            return errorResponse(res, "Lỗi server, vui lòng thử lại!", 500);
+    //         return successResponse(res, "Cập nhật thông tin người dùng thành công!", null, 200);
+    //     } catch (error) {
+    //         console.error("Lỗi khi cập nhật người dùng:", error);
+    //         return errorResponse(res, "Lỗi server, vui lòng thử lại!", 500);
+    //     }
+    // }
+
+    static async resetPassword(req, res) {
+    const { email } = req.body;
+    try {
+        const user = await UserModel.findOne({ where: { email } });
+        if (!user) {
+            return errorResponse(res, "Email không tồn tại!", 404);
         }
+
+        if (user.status === 'locked') {
+            return errorResponse(res, "Tài khoản bị khóa, không thể đặt lại mật khẩu!", 403);
+        }
+
+        // Tạo mã OTP 6 số
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 2 * 60 * 1000; // 2 phút
+
+        // Lưu OTP vào store theo email
+        otpStore.set(email, { code: otp, expiresAt });
+
+        // Gửi OTP qua email
+        await sendResetPassword(email, otp); // truyền otp thay vì link
+
+        return successResponse(res, "Mã OTP đã được gửi về email!", null, 200);
+    } catch (error) {
+        console.error("Lỗi xảy ra khi reset password:", error);
+        return errorResponse(res, "Lỗi server, vui lòng thử lại!", 500);
     }
+}
+
+static async verifyResetOTP(req, res) {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+        return errorResponse(res, "Email và OTP là bắt buộc!", 400);
+    }
+
+    const record = otpStore.get(email);
+    if (!record) {
+        return errorResponse(res, "Không tìm thấy mã OTP. Vui lòng yêu cầu lại.", 400);
+    }
+
+    if (Date.now() > record.expiresAt) {
+        otpStore.delete(email);
+        return errorResponse(res, "Mã OTP đã hết hạn. Vui lòng yêu cầu lại.", 410);
+    }
+
+    if (String(otp) !== String(record.code)) {
+        return errorResponse(res, "Mã OTP không đúng.", 400);
+    }
+
+    // OTP đúng → tạo token tạm để đặt lại mật khẩu
+    const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: "10m" });
+    otpStore.delete(email);
+
+    return successResponse(res, "Xác thực OTP thành công!", { resetToken }, 200);
+}
+
+static async updatePassword(req, res) {
+    const { resetToken, password } = req.body; // đổi từ params sang body
+
+    try {
+        const decoded = jwt.verify(resetToken, JWT_SECRET);
+        const user = await UserModel.findOne({ where: { email: decoded.email } });
+
+        if (!user) {
+            return errorResponse(res, "Người dùng không tồn tại!", 404);
+        }
+
+        if (!password || password.length < 6) {
+            return errorResponse(res, "Mật khẩu phải ít nhất 6 ký tự!", 400);
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await user.update({
+            password: hashedPassword,
+            remember_token: null
+        });
+
+        return successResponse(res, "Cập nhật mật khẩu thành công!", null, 200);
+    } catch (error) {
+        if (error.name === "TokenExpiredError") {
+            return errorResponse(res, "Phiên đặt lại mật khẩu đã hết hạn!", 401);
+        }
+        return errorResponse(res, "Token không hợp lệ!", 400);
+    }
+}
 
 }
 

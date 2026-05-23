@@ -8,7 +8,6 @@ const AuctionBidModel = require('../../models/auctionBidsModel');
 
 const { Op } = require('sequelize');
 
-const otpStore = new Map();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",

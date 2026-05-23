@@ -459,6 +459,7 @@ class DashboardController {
     }
   }
 
+
   static async getTopPromotions(req, res) {
     try {
       const { from, to, limit = 5 } = req.query || {};

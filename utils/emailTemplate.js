@@ -15,8 +15,8 @@ const getEmailTemplate = (userName, newStatus, reason) => `
           <!-- Header -->
           <tr>
             <td style="background-color:#073272;padding:20px;text-align:center;">
-              <img src="https://res.cloudinary.com/disgf4yl7/image/upload/v1754403723/xpd7jmghcjjfelzbhyb0.png"
-                   alt="TIMEMASTERS" width="120" style="display:block;margin:0 auto 10px;" />
+              <img src="https://res.cloudinary.com/dyu8kdule/image/upload/v1779260296/logo_h62roc.jpg"
+                   alt="TRANHUONG" width="120" style="display:block;margin:0 auto 10px;" />
               <h1 style="color:#ffffff;font-size:24px;margin:0;">Thông báo trạng thái tài khoản</h1>
             </td>
           </tr>
@@ -36,13 +36,13 @@ const getEmailTemplate = (userName, newStatus, reason) => `
                 </tr>
               </table>
               <p style="font-size:15px;color:#555555;">Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi.</p>
-              <p style="font-size:15px;">Trân trọng,<br><strong>Đội ngũ TIMEMASTERS</strong></p>
+              <p style="font-size:15px;">Trân trọng,<br><strong>Đội ngũ Công ty TNHH Thực Phẩm Thương Mại Dịch Vụ Trân Hương</strong></p>
             </td>
           </tr>
           <!-- Footer -->
           <tr>
             <td style="background-color:#f8f9fa;padding:20px;text-align:center;font-size:12px;color:#888888;">
-              <p style="margin:0;">© ${new Date().getFullYear()} TIMEMASTERS. Địa chỉ: Số 233, Nguyễn Văn Linh, Cần Thơ</p>
+              <p style="margin:0;">© ${new Date().getFullYear()} TRAN HUONG. Địa chỉ: Lô D12, Ô 29-30 Khu dân cư Thuận Giao, khu phố Bình Thuận 2, Thuận Giao, Hồ Chí Minh</p>
               <p style="margin:5px 0 0;font-style:italic;">Email tự động, vui lòng không trả lời lại.</p>
             </td>
           </tr>
@@ -80,7 +80,7 @@ const getWishlistPromoTemplate = (
           <tr>
             <td style="background-color:#073272;padding:20px;text-align:center;">
               <img src="https://res.cloudinary.com/disgf4yl7/image/upload/v1754403723/xpd7jmghcjjfelzbhyb0.png"
-                   alt="TIMEMASTERS" width="120" style="display:block;margin:0 auto 10px;" />
+                   alt="TRANHUONG" width="120" style="display:block;margin:0 auto 10px;" />
               <h1 style="color:#ffffff;font-size:24px;margin:0;">Khuyến mãi dành cho bạn</h1>
             </td>
           </tr>
@@ -121,7 +121,7 @@ const getWishlistPromoTemplate = (
           <!-- Footer -->
           <tr>
             <td style="background-color:#f8f9fa;padding:20px;text-align:center;font-size:12px;color:#888888;">
-              <p style="margin:0;">© ${new Date().getFullYear()} TIMEMASTERS.</p>
+              <p style="margin:0;">© ${new Date().getFullYear()} TRANHUONG.</p>
               <p style="margin:5px 0 0;font-style:italic;">Email tự động, vui lòng không trả lời lại.</p>
             </td>
           </tr>

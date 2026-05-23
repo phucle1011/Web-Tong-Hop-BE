@@ -17,19 +17,24 @@ const AddressModel = connection.define('address', {
     },
     ward: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true  // ← đổi thành true
+    },
+    province: {
+        type: DataTypes.STRING,
+        allowNull: true  // ← thêm field mới thay city
     },
     city: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true  // ← đổi thành true (giữ để không lỗi DB cũ)
     },
     district: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true  // ← đổi thành true (giữ để không lỗi DB cũ)
     },
     is_default: {
         type: DataTypes.TINYINT,
-        allowNull: false
+        allowNull: false,
+        defaultValue: 0
     }
 }, {
     tableName: 'addresses',

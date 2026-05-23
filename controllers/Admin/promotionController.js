@@ -299,7 +299,7 @@ class PromotionController {
           model: OrderModel,
           as: 'orders',
           where: {
-            status: 'delivered',
+            status: { [Op.in]: ['delivered', 'completed'] },
             created_at: {
               [Op.between]: [startOfLastMonth, endOfLastMonth]
             }

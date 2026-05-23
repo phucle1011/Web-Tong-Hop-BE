@@ -48,7 +48,7 @@ async function notifyWishlistPromotions() {
           if (!user?.email) continue;
 
          await transporter.sendMail({
-            from: `"TIMEMASTERS" <${process.env.EMAIL_USER}>`,
+            from: `"TRANHUONG" <${process.env.EMAIL_USER}>`,
             to: user.email,
             subject: `Sản phẩm bạn yêu thích đang giảm giá!`,
             html: `
@@ -66,7 +66,7 @@ async function notifyWishlistPromotions() {
                         <tr>
                           <td style="background-color:#073272;padding:20px;text-align:center;">
                             <img src="https://res.cloudinary.com/disgf4yl7/image/upload/v1754403723/xpd7jmghcjjfelzbhyb0.png"
-                                alt="TIMEMASTERS" width="120"
+                                alt="TRANHUONG" width="120"
                                 style="display:block;margin:0 auto 10px;" />
                             <h1 style="color:#ffffff;font-size:24px;margin:0;">Khuyến mãi dành riêng cho bạn</h1>
                           </td>
@@ -117,7 +117,7 @@ async function notifyWishlistPromotions() {
                             </table>
 
                             <p style="font-size:14px;color:#555555;margin-top:20px;">
-                              Cảm ơn bạn đã tin tưởng TIMEMASTERS.
+                              Cảm ơn bạn đã tin tưởng TRANHUONG.
                             </p>
                           </td>
                         </tr>
@@ -126,7 +126,7 @@ async function notifyWishlistPromotions() {
                         <tr>
                           <td style="background-color:#f8f9fa;padding:20px;
                                     text-align:center;font-size:12px;color:#888888;">
-                            <p style="margin:0;">© ${new Date().getFullYear()} TIMEMASTERS.</p>
+                            <p style="margin:0;">© ${new Date().getFullYear()} TRANHUONG.</p>
                             <p style="margin:5px 0 0;font-style:italic;">Email tự động, vui lòng không trả lời lại.</p>
                           </td>
                         </tr>

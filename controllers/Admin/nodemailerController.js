@@ -55,7 +55,7 @@ class EmailController {
         <div style="font-family: Arial, sans-serif; max-width: 700px; margin: auto; background-color: #ffffff; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; color: #333;">
           <div style="text-align: center; padding: 20px; background-color: #f1faff; border-bottom: 2px solid #007acc;">
             <img src="https://res.cloudinary.com/disgf4yl7/image/upload/v1754403723/xpd7jmghcjjfelzbhyb0.png" alt="Logo doanh nghiệp" style="width: 140px;" />
-            <h1 style="margin: 0; font-size: 26px; color: #007acc;">TIMEMASTERS</h1>
+            <h1 style="margin: 0; font-size: 26px; color: #007acc;">TRANHUONG</h1>
             <p style="margin: 4px 0; font-size: 14px; color: #555;">
               Hotline: <a href="tel:+84123456789" style="color: #007acc;">+84 123 456 789</a>
             </p>
@@ -76,12 +76,12 @@ class EmailController {
             <div style="background-color: #f1faee; padding: 15px; margin-bottom: 20px;">${content}</div>
 
             <p style="font-size: 15px; color: #555;">
-              Cảm ơn bạn đã đồng hành cùng <strong>TIMEMASTERS</strong>.
+              Cảm ơn bạn đã đồng hành cùng <strong>TRANHUONG</strong>.
             </p>
           </div>
 
           <div style="text-align: center; font-size: 13px; color: #999; padding: 20px; background-color: #f8f9fa; border-top: 1px solid #ddd;">
-            <p style="margin: 5px 0;">© 2025 TIMEMASTERS. Địa chỉ: Số 233, Nguyễn Văn Linh, Cần Thơ</p>
+            <p style="margin: 5px 0;">© 2025 TRANHUONG. Địa chỉ: Số 233, Nguyễn Văn Linh, Cần Thơ</p>
             <p style="margin: 5px 0; font-style: italic;">Email này được gửi tự động, vui lòng không trả lời lại.</p>
           </div>
         </div>`;

@@ -13,7 +13,7 @@ const sendVerificationEmail = async (email, verificationToken) => {
     const verificationLink = `${process.env.CLIENT_URL}/auth/verify-email?token=${verificationToken}`;
 
     const mailOptions = {
-        from: `"TIMEMASTERS" <${process.env.EMAIL_USER}>`,
+        from: `"TRANHUONG" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Xác thực địa chỉ email của bạn",
         html: `
@@ -25,7 +25,7 @@ const sendVerificationEmail = async (email, verificationToken) => {
               <!-- Header -->
               <tr>
                 <td style="background-color: #073272; padding: 20px; text-align: center;">
-                  <img src="https://res.cloudinary.com/disgf4yl7/image/upload/v1754403723/xpd7jmghcjjfelzbhyb0.png" alt="TIMEMASTERS" width="120" style="display: block; margin: 0 auto 10px;" />
+                  <img src="https://res.cloudinary.com/disgf4yl7/image/upload/v1754403723/xpd7jmghcjjfelzbhyb0.png" alt="TRANHUONG" width="120" style="display: block; margin: 0 auto 10px;" />
                   <h1 style="color: #ffffff; font-size: 24px; margin: 0;">Xác thực Email</h1>
                 </td>
               </tr>
@@ -35,7 +35,7 @@ const sendVerificationEmail = async (email, verificationToken) => {
                 <td style="padding: 30px; color: #333333;">
                   <p style="font-size: 16px; margin-top: 0;">Xin chào,</p>
                   <p style="font-size: 15px; line-height: 1.6;">
-                    Cảm ơn bạn đã đăng ký tài khoản tại TIMEMASTERS.  
+                    Cảm ơn bạn đã đăng ký tài khoản tại TRANHUONG.  
                     Vui lòng nhấp vào nút bên dưới để xác thực địa chỉ email của bạn:
                   </p>
                   <p style="text-align: center; margin: 30px 0;">
@@ -65,7 +65,7 @@ const sendVerificationEmail = async (email, verificationToken) => {
               <!-- Footer -->
               <tr>
                 <td style="background-color: #f8f9fa; padding: 20px; font-size: 12px; color: #888888; text-align: center;">
-                  <p style="margin: 0;">© ${new Date().getFullYear()} TIMEMASTERS.</p>
+                  <p style="margin: 0;">© ${new Date().getFullYear()} TRANHUONG.</p>
                   <p style="margin: 5px 0 0;">Email tự động, vui lòng không trả lời lại.</p>
                 </td>
               </tr>

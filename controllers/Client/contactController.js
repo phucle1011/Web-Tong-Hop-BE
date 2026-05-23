@@ -74,7 +74,7 @@ class ContactController {
     });
 
    const mailOptions = {
-  from: `"TimeMasters Support" <${process.env.EMAIL_USER}>`,
+  from: `"TRANHUONG Support" <${process.env.EMAIL_USER}>`,
   to: process.env.EMAIL_USER,
   replyTo: email, 
   subject: `Câu hỏi từ khách hàng: ${first_name} - ${subject || "Không có tiêu đề"}`,
@@ -82,7 +82,7 @@ class ContactController {
     <table style="width:100%; max-width:600px; font-family: Arial, sans-serif; border:1px solid #ddd; border-radius:8px; background:#f9f9f9; padding:20px; margin:auto;">
       <tr>
         <td style="border-bottom:2px solid #3498db; padding-bottom:10px;">
-          <h2 style="color:#2c3e50; margin:0;">Khách hàng gửi phản hồi đến TimeMasters</h2>
+          <h2 style="color:#2c3e50; margin:0;">Khách hàng gửi phản hồi đến TRANHUONG</h2>
         </td>
       </tr>
       <tr>

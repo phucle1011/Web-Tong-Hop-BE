@@ -14,11 +14,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendResetPassword = async (email, resetLink) => {
+const sendResetPassword = async (email, otp) => {
   const mailOptions = {
-    from: `"TIMEMASTERS" <${process.env.EMAIL_USER}>`,
+    from: `"TRANHUONG" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Yêu cầu đặt lại mật khẩu",
+    subject: "Mã OTP đặt lại mật khẩu",
     html: `
       <table width="100%" cellpadding="0" cellspacing="0" style="font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; padding: 40px 0;">
         <tr>
@@ -27,7 +27,7 @@ const sendResetPassword = async (email, resetLink) => {
               <!-- Header -->
               <tr>
                 <td style="background-color: #073272; padding: 20px; text-align: center;">
-                  <img src="https://res.cloudinary.com/disgf4yl7/image/upload/v1754403723/xpd7jmghcjjfelzbhyb0.png" alt="TIMEMASTERS" width="120" style="display: block; margin: 0 auto 10px;" />
+                  <img src="https://res.cloudinary.com/dyu8kdule/image/upload/v1779260296/logo_h62roc.jpg" alt="TRANHUONG" width="120" style="display: block; margin: 0 auto 10px;" />
                   <h1 style="color: #ffffff; font-size: 24px; margin: 0;">Đặt lại mật khẩu</h1>
                 </td>
               </tr>
@@ -37,25 +37,30 @@ const sendResetPassword = async (email, resetLink) => {
                 <td style="padding: 30px; color: #333333;">
                   <p style="font-size: 16px; margin-top: 0;">Xin chào,</p>
                   <p style="font-size: 15px; line-height: 1.6;">
-                    Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.  
-                    Vui lòng nhấp vào nút bên dưới để tạo mật khẩu mới:
+                    Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.<br/>
+                    Vui lòng dùng mã OTP bên dưới để xác thực:
                   </p>
+
+                  <!-- OTP Box -->
                   <p style="text-align: center; margin: 30px 0;">
-                    <a href="${resetLink}"
-                       style="
-                         background-color: #073272;
-                         color: #ffffff;
-                         text-decoration: none;
-                         padding: 12px 28px;
-                         border-radius: 4px;
-                         font-size: 16px;
-                         display: inline-block;
-                       ">
-                      Đặt lại mật khẩu
-                    </a>
+                    <span style="
+                      display: inline-block;
+                      background-color: #f0f4ff;
+                      border: 2px dashed #073272;
+                      border-radius: 8px;
+                      padding: 16px 40px;
+                      font-size: 36px;
+                      font-weight: bold;
+                      letter-spacing: 10px;
+                      color: #073272;
+                    ">${otp}</span>
                   </p>
-                  <p style="font-size: 14px; color: #555555;">
-                    Liên kết này sẽ hết hạn sau <strong>1 giờ</strong>.  
+
+                  <p style="font-size: 14px; color: #555555; text-align: center;">
+                    Mã OTP có hiệu lực trong <strong>2 phút</strong>.<br/>
+                    Không chia sẻ mã này cho bất kỳ ai.
+                  </p>
+                  <p style="font-size: 14px; color: #999999; text-align: center;">
                     Nếu bạn không yêu cầu, vui lòng bỏ qua email này.
                   </p>
                 </td>
@@ -64,7 +69,7 @@ const sendResetPassword = async (email, resetLink) => {
               <!-- Footer -->
               <tr>
                 <td style="background-color: #f8f9fa; padding: 20px; font-size: 12px; color: #888888; text-align: center;">
-                  <p style="margin: 0;">© 2025 TIMEMASTERS.</p>
+                  <p style="margin: 0;">© 2026 Công ty TNHH Thực Phẩm Thương Mại Dịch Vụ Trân Hương.</p>
                   <p style="margin: 5px 0 0;">Email tự động, vui lòng không trả lời lại.</p>
                 </td>
               </tr>
@@ -79,12 +84,8 @@ const sendResetPassword = async (email, resetLink) => {
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error("Lỗi gửi email đặt lại mật khẩu:", error);
-    throw new Error("Không thể gửi email đặt lại mật khẩu");
+    console.error("Lỗi gửi email OTP:", error);
+    throw new Error("Không thể gửi email OTP");
   }
 };
-
-
-
-
 module.exports = sendResetPassword;

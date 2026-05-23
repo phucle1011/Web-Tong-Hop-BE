@@ -33,8 +33,31 @@ class ChatController {
       const keywords = normalizedPrompt.split(/\s|-/).filter(Boolean);
 
       const greetings = [
-        "chao", "xin chao", "hello", "hi", "minh muon hoi",
-        "co ai o do khong", "shop oi", "tu van", "giup voi"
+        // Chào hỏi cơ bản
+        "chao", "xin chao", "hello", "hi", "hey", "alo", "ole",
+        "chao buoi sang", "chao buoi chieu", "chao buoi toi",
+        "good morning", "good afternoon", "good evening",
+
+        // Hỏi có người không
+        "co ai o do khong", "shop oi", "co nguoi khong",
+        "oi shop", "shop co day khong", "co ai tu van khong",
+        "cho minh hoi", "hoi chut", "hoi ti",
+
+        // Muốn tư vấn
+        "minh muon hoi", "tu van", "giup voi", "giup minh voi",
+        "can tu van", "can giup do", "ho tro minh",
+        "minh can ho tro", "tu van giup minh",
+        "ban oi", "em oi", "anh oi", "chi oi",
+
+        // Bắt đầu cuộc hội thoại
+        "bat dau", "minh moi vao", "lan dau mua",
+        "minh chua biet", "cho minh xem", "minh muon xem",
+        "minh muon tim", "tim kiem giup minh",
+
+        // Cảm ơn / kết thúc
+        "cam on", "cam on ban", "cam on shop", "thank you", "thanks",
+        "ok cam on", "duoc roi cam on", "thoi cam on nhe",
+        "bai", "tam biet", "goodbye", "bye"
       ];
 
       const isGreeting = greetings.some(g =>
@@ -43,39 +66,74 @@ class ChatController {
       );
 
       if (isGreeting) {
+        // Trả lời đa dạng theo loại lời chào
+        const isBye = ["tam biet", "bye", "goodbye", "bai", "thoi cam on", "duoc roi"].some(g =>
+          normalizedPrompt.includes(g)
+        );
+        const isThankYou = ["cam on", "thank", "thanks"].some(g =>
+          normalizedPrompt.includes(g)
+        );
+
+        let replyText = "Xin chào bạn! Mình có thể giúp gì cho bạn hôm nay? 😊";
+        if (isBye) {
+          replyText = "Cảm ơn bạn đã ghé thăm shop! Chúc bạn một ngày tốt lành 👋";
+        } else if (isThankYou) {
+          replyText = "Không có gì bạn ơi! Nếu cần hỗ trợ thêm cứ nhắn mình nhé 😊";
+        }
+
         return res.json({
-          reply: "Xin chào bạn! Mình có thể giúp gì cho bạn hôm nay?",
+          reply: replyText,
           products: []
         });
       }
 
       // Intent detection
-      const isProductIntent = ['dong ho', 'san pham'].some(kw => normalizedPrompt.includes(kw));
-      const isPromotionIntent = ['khuyen mai', 'giam gia'].some(kw => normalizedPrompt.includes(kw));
-      const isWarrantyIntent = ['bao hanh', 'doi tra'].some(kw => normalizedPrompt.includes(kw));
-      const isShippingIntent = ['giao hang', 'van chuyen'].some(kw => normalizedPrompt.includes(kw));
-      const isContactIntent = ['lien he', 'hotline', 'ho tro'].some(kw => normalizedPrompt.includes(kw));
-      const isVariantIntent = ['mau sac', 'mau', 'size', 'kich thuoc', 'day da', 'day kim loai', 'kieu', 'mat so', 'kích thước', 'chất liệu dây', 'chất liệu vỏ', 'chuyển động'].some(kw =>
+      const isProductIntent = ['trung', 'trung ga', 'trung da', 'trung tuoi', 'trung sach', 'san pham', 'hang'].some(kw =>
+        normalizedPrompt.includes(kw)
+      );
+      const isPromotionIntent = ['khuyen mai', 'giam gia', 'sale', 'uu dai', 'khuyen mai gi', 'co khuyen mai'].some(kw =>
+        normalizedPrompt.includes(kw)
+      );
+      const isWarrantyIntent = ['doi tra', 'hoan tien', 'tra hang', 'bi loi', 'hong', 'tha', 'bi vo'].some(kw =>
+        normalizedPrompt.includes(kw)
+      );
+      const isShippingIntent = ['giao hang', 'van chuyen', 'ship', 'nhan hang', 'bao lau', 'phi ship', 'phi giao'].some(kw =>
+        normalizedPrompt.includes(kw)
+      );
+      const isContactIntent = ['lien he', 'hotline', 'ho tro', 'so dien thoai', 'zalo', 'facebook'].some(kw =>
+        normalizedPrompt.includes(kw)
+      );
+      const isStorageIntent = ['bao quan', 'de duoc bao lau', 'han su dung', 'hat', 'tuoi', 'tu lanh'].some(kw =>
+        normalizedPrompt.includes(kw)
+      );
+      const isVariantIntent = ['loai', 'size', 'kich co', 'vi', 'so luong', 'vi lon', 'vi nho', 'hop', 'kg', 'ky'].some(kw =>
         normalizedPrompt.includes(kw)
       );
 
       if (isWarrantyIntent) {
         return res.json({
-          reply: "Sản phẩm bên mình được bảo hành chính hãng 12 tháng. Bạn cần hỗ trợ thêm gì không?",
+          reply: "Bên mình hỗ trợ đổi trả trong vòng 24 giờ nếu trứng bị hỏng hoặc không đạt chất lượng. Bạn vui lòng chụp ảnh sản phẩm và liên hệ shop nhé!",
           products: []
         });
       }
 
       if (isShippingIntent) {
         return res.json({
-          reply: "Bên mình hỗ trợ giao hàng toàn quốc, thời gian từ 2–5 ngày tùy khu vực bạn nhé.",
+          reply: "Bên mình giao hàng toàn quốc, thời gian 1–3 ngày. Đơn từ 100.000đ được miễn phí ship. Trứng được đóng gói cẩn thận để tránh vỡ trong quá trình vận chuyển 🥚",
+          products: []
+        });
+      }
+
+      if (isStorageIntent) {
+        return res.json({
+          reply: "Trứng tươi bảo quản được 2–3 tuần ở nhiệt độ thường và 1–2 tháng trong tủ lạnh. Bạn nên để trứng ở ngăn mát và tránh rửa trứng trước khi cất nhé!",
           products: []
         });
       }
 
       if (isContactIntent) {
         return res.json({
-          reply: "Bạn có thể liên hệ bên mình qua số hotline 0123.456.789 hoặc email hotro@dongho.vn",
+          reply: "Bạn có thể liên hệ bên mình qua số hotline 0123.456.789, Zalo cùng số hoặc email hotro@trungtuoi.vn. Shop hoạt động từ 7h–20h mỗi ngày!",
           products: [],
           action: "contact",
         });
@@ -83,11 +141,10 @@ class ChatController {
 
       if (!isProductIntent && !isPromotionIntent && !isVariantIntent) {
         return res.json({
-          reply: "Xin lỗi bạn, mình chưa rõ yêu cầu. Bạn có thể nói cụ thể hơn không ạ?",
+          reply: "Xin lỗi bạn, mình chưa rõ yêu cầu. Bạn có thể hỏi về các loại trứng, giá cả, giao hàng hoặc khuyến mãi nhé! 🥚",
           products: []
         });
       }
-
       const matchedProducts = await Product.findAll({
         where: {
           status: 1,
@@ -266,9 +323,8 @@ Nếu không có thông tin phù hợp, hãy trả lời theo cách lịch sự 
       });
     } catch (error) {
       console.error("Gemini API Error:", error?.response?.data || error.message);
-      res.status(500).json({
-        reply: "Lỗi từ server Gemini.",
-        detail: error?.response?.data || error.message,
+      res.status(200).json({
+        reply: "Xin lỗi bạn, mình chưa hiểu câu hỏi này. Bạn có thể hỏi về các loại trứng, giá cả, giao hàng hoặc liên hệ shop nhé! 🥚",
         products: []
       });
     }

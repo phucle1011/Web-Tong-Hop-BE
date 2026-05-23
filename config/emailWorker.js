@@ -16,7 +16,7 @@ emailQueue.process(async (job, done) => {
     });
 
     await transporter.sendMail({
-      from: `"TIMEMASTERS" <${process.env.EMAIL_USER}>`,
+      from: `"TRANHUONG" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,
