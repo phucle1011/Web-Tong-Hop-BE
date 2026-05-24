@@ -1,7 +1,8 @@
+const cors = require('cors');
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors');
+
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -21,6 +22,14 @@ const attachUser = require('./services/attachUser');
 
 
 const webhookRoutes = require('./routes/webhookRoutes');
+
+app.use(cors({
+  origin: "*",
+  methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+  allowedHeaders: "Content-Type, Authorization",
+  credentials: true
+}));
+
 app.use('/stripe/webhook', express.raw({ type: 'application/json' }), webhookRoutes);
 
 
@@ -71,12 +80,7 @@ const apiRoutes = require('./routes/apiRoutes');
 app.use('/public', express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
-app.use(cors({
-  origin: "*",
-  methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-  allowedHeaders: "Content-Type, Authorization",
-  credentials: true
-}));
+
 
 app.use(apiRoutes);
 app.use(clientRoutes);
