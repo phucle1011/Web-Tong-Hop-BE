@@ -1843,13 +1843,13 @@ class OrderController {
         currentDateTime
     ) {
         try {
-            let transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
-                },
-            });
+            // let transporter = nodemailer.createTransport({
+            //     service: "gmail",
+            //     auth: {
+            //         user: process.env.EMAIL_USER,
+            //         pass: process.env.EMAIL_PASS,
+            //     },
+            // });
 
             const currentDateTimeUTC = new Date();
             const formattedDate = currentDateTimeUTC.toLocaleString("vi-VN", {
