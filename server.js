@@ -30,8 +30,9 @@ app.use(cors({
   credentials: true
 }));
 
-app.use('/stripe/webhook', express.raw({ type: 'application/json' }), webhookRoutes);
+app.options('*', cors());
 
+app.use('/stripe/webhook', express.raw({ type: 'application/json' }), webhookRoutes);
 
 cron.schedule('0 0 * * *', async () => {
   try {
@@ -66,11 +67,13 @@ cron.schedule('0 9 * * *', () => {
   notifyWishlistPromotions();
 });
 
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 require('./models/connectsModel');
 require('./controllers/Admin/cronJobController');
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+
 
 const clientRoutes = require('./routes/clientRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -81,9 +84,8 @@ app.use('/public', express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
 
-
+// app.use(clientRoutes);
 app.use(apiRoutes);
-app.use(clientRoutes);
 app.use('/admin', adminRoutes);
 app.use('/', attachUser, updateLastActive, clientRoutes);
 
@@ -134,6 +136,7 @@ app.set('io', io);
 //     console.error('[REDIS] boot connect failed:', e.message);
 //   }
 // })();
+
 
 server.listen(port, () => {
   console.log(`Server chạy tại http://localhost:${port}`);
