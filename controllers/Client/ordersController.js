@@ -1843,13 +1843,13 @@ class OrderController {
         currentDateTime
     ) {
         try {
-            // let transporter = nodemailer.createTransport({
-            //     service: "gmail",
-            //     auth: {
-            //         user: process.env.EMAIL_USER,
-            //         pass: process.env.EMAIL_PASS,
-            //     },
-            // });
+            let transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS,
+                },
+            });
 
             const currentDateTimeUTC = new Date();
             const formattedDate = currentDateTimeUTC.toLocaleString("vi-VN", {
@@ -2070,20 +2070,9 @@ class OrderController {
             //     console.error("Lỗi gửi email xác nhận đơn hàng:", error);
             //     throw new Error("Không thể gửi email xác nhận đơn hàng.");
             // }
-            const nodemailer = require('nodemailer');
-            const transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure: true,
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
-                },
-                tls: { rejectUnauthorized: false }
-            });
 
-            await transporter.sendMail({
-                from: `"TRANHUONG" <${process.env.EMAIL_USER}>`,
+            const emailQueue = require('../config/emailQueue');
+            await emailQueue.add({
                 to: customerEmail,
                 subject: `Xác nhận đơn hàng #${order.order_code}`,
                 html: htmlContent,
@@ -2091,7 +2080,7 @@ class OrderController {
 
         } catch (error) {
             console.error("Lỗi gửi email xác nhận đơn hàng:", error);
-            // ✅ Không throw — lỗi email không ảnh hưởng đơn hàng
+            // ✅ Bỏ throw — lỗi email không crash server
         }
     }
 

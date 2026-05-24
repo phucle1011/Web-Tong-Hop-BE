@@ -142,24 +142,5 @@ server.listen(port, () => {
   console.log(`Server chạy tại http://localhost:${port}`);
 });
 
-// Thêm vào cuối server.js — xóa sau khi test
-const nodemailer = require('nodemailer');
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  }
-});
-
-transporter.sendMail({
-  from: process.env.EMAIL_USER,
-  to: process.env.EMAIL_USER,
-  subject: 'Test Render',
-  text: 'Test OK!',
-}).then(() => console.log('✅ Email test OK'))
-  .catch(err => console.error('❌ Email test FAILED:', err.message));
 require('./config/emailWorker');
 

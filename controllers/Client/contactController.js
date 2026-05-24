@@ -1,28 +1,28 @@
 const nodemailer = require("nodemailer");
 
 class ContactController {
-    static async sendContactEmail(req, res) {
-        const { first_name, email, subject, message } = req.body;
+  static async sendContactEmail(req, res) {
+    const { first_name, email, subject, message } = req.body;
 
-        if (!first_name || !email || !subject || !message) {
-            return res.status(400).json({ error: "Vui lòng điền đầy đủ thông tin." });
-        }
+    if (!first_name || !email || !subject || !message) {
+      return res.status(400).json({ error: "Vui lòng điền đầy đủ thông tin." });
+    }
 
-        try {
-            const transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
-                },
-            });
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
 
-            const mailOptions = {
-  from: `<${process.env.EMAIL_USER}>`,  
-  to: process.env.EMAIL_USER, 
-  replyTo: email,  
-  subject: ` ${subject}`,
-  html: `
+      const mailOptions = {
+        from: `<${process.env.EMAIL_USER}>`,
+        to: process.env.EMAIL_USER,
+        replyTo: email,
+        subject: ` ${subject}`,
+        html: `
     <table style="width:100%; max-width:600px; font-family: Arial, sans-serif; border:1px solid #ddd; border-radius:8px; background:#f9f9f9; padding:20px; margin:auto;">
       <tr>
         <td style="border-bottom:2px solid #3498db; padding-bottom:10px;">
@@ -46,39 +46,39 @@ class ContactController {
       </tr>
     </table>
   `
-};
+      };
 
-            await transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
 
-            return res.status(200).json({ message: "Gửi liên hệ thành công!" });
-        } catch (error) {
-            console.error("Lỗi gửi mail:", error);
-            return res.status(500).json({ error: "Không thể gửi email." });
-        }
+      return res.status(200).json({ message: "Gửi liên hệ thành công!" });
+    } catch (error) {
+      console.error("Lỗi gửi mail:", error);
+      return res.status(500).json({ error: "Không thể gửi email." });
     }
-    
-    static async sendFaqEmail(req, res) {
-  const { first_name, email, message } = req.body;
-
-  if (!first_name || !email || !message) {
-    return res.status(400).json({ error: "Vui lòng điền đầy đủ thông tin." });
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+  static async sendFaqEmail(req, res) {
+    const { first_name, email, message } = req.body;
 
-   const mailOptions = {
-  from: `"TRANHUONG Support" <${process.env.EMAIL_USER}>`,
-  to: process.env.EMAIL_USER,
-  replyTo: email, 
-  subject: `Câu hỏi từ khách hàng: ${first_name} - ${subject || "Không có tiêu đề"}`,
-  html: `
+    if (!first_name || !email || !message) {
+      return res.status(400).json({ error: "Vui lòng điền đầy đủ thông tin." });
+    }
+
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"TRANHUONG Support" <${process.env.EMAIL_USER}>`,
+        to: process.env.EMAIL_USER,
+        replyTo: email,
+        subject: `Câu hỏi từ khách hàng: ${first_name} - ${subject || "Không có tiêu đề"}`,
+        html: `
     <table style="width:100%; max-width:600px; font-family: Arial, sans-serif; border:1px solid #ddd; border-radius:8px; background:#f9f9f9; padding:20px; margin:auto;">
       <tr>
         <td style="border-bottom:2px solid #3498db; padding-bottom:10px;">
@@ -108,16 +108,16 @@ class ContactController {
       </tr>
     </table>
   `
-};
+      };
 
 
-    await transporter.sendMail(mailOptions);
-    return res.status(200).json({ message: "Gửi thành công từ trang FAQ!" });
-  } catch (error) {
-    console.error("Lỗi gửi mail FAQ:", error);
-    return res.status(500).json({ error: "Không thể gửi email từ FAQ." });
+      await transporter.sendMail(mailOptions);
+      return res.status(200).json({ message: "Gửi thành công từ trang FAQ!" });
+    } catch (error) {
+      console.error("Lỗi gửi mail FAQ:", error);
+      return res.status(500).json({ error: "Không thể gửi email từ FAQ." });
+    }
   }
-}
 
 }
 
