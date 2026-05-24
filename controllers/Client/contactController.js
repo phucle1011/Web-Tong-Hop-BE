@@ -61,7 +61,7 @@ class ContactController {
   }
 
   static async sendFaqEmail(req, res) {
-    const { first_name, email, message } = req.body;
+   const { first_name, email, message, subject } = req.body;
 
     if (!first_name || !email || !message) {
       return res.status(400).json({ error: "Vui lòng điền đầy đủ thông tin." });
