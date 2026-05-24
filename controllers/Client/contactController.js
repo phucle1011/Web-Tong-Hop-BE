@@ -9,49 +9,26 @@ class ContactController {
     }
 
     try {
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        tls: { rejectUnauthorized: false }
-      });
-
-      const mailOptions = {
-        from: `<${process.env.EMAIL_USER}>`,
+      await resend.emails.send({
+        from: 'onboarding@resend.dev',
         to: process.env.EMAIL_USER,
         replyTo: email,
-        subject: ` ${subject}`,
+        subject: subject,
         html: `
-    <table style="width:100%; max-width:600px; font-family: Arial, sans-serif; border:1px solid #ddd; border-radius:8px; background:#f9f9f9; padding:20px; margin:auto;">
-      <tr>
-        <td style="border-bottom:2px solid #3498db; padding-bottom:10px;">
-          <h2 style="color:#2c3e50; margin:0;">Thông tin liên hệ từ khách hàng</h2>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0;"><strong>Tên:</strong> ${first_name}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0;"><strong>Email:</strong> <a href="mailto:${email}" style="color:#3498db;">${email}</a></td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0;"><strong>Chủ đề:</strong> ${subject}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0;">
-          <strong>Nội dung:</strong>
-          <div style="background:#fff; border:1px solid #ddd; padding:15px; border-radius:6px; white-space:pre-wrap;">${message}</div>
-        </td>
-      </tr>
-    </table>
-  `
-      };
-
-      await transporter.sendMail(mailOptions);
+          <table style="width:100%; max-width:600px; font-family: Arial, sans-serif; border:1px solid #ddd; border-radius:8px; background:#f9f9f9; padding:20px; margin:auto;">
+            <tr><td style="border-bottom:2px solid #3498db; padding-bottom:10px;">
+              <h2 style="color:#2c3e50; margin:0;">Thông tin liên hệ từ khách hàng</h2>
+            </td></tr>
+            <tr><td style="padding:10px 0;"><strong>Tên:</strong> ${first_name}</td></tr>
+            <tr><td style="padding:10px 0;"><strong>Email:</strong> <a href="mailto:${email}" style="color:#3498db;">${email}</a></td></tr>
+            <tr><td style="padding:10px 0;"><strong>Chủ đề:</strong> ${subject}</td></tr>
+            <tr><td style="padding:10px 0;">
+              <strong>Nội dung:</strong>
+              <div style="background:#fff; border:1px solid #ddd; padding:15px; border-radius:6px; white-space:pre-wrap;">${message}</div>
+            </td></tr>
+          </table>
+        `
+      });
 
       return res.status(200).json({ message: "Gửi liên hệ thành công!" });
     } catch (error) {
@@ -59,6 +36,7 @@ class ContactController {
       return res.status(500).json({ error: "Không thể gửi email." });
     }
   }
+
 
   static async sendFaqEmail(req, res) {
    const { first_name, email, message, subject } = req.body;
