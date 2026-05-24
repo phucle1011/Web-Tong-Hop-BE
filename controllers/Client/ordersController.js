@@ -28,6 +28,9 @@ const crypto = require("crypto");
 const { lookup } = require("dns");
 const { log } = require("console");
 
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 class OrderController {
     static async get(req, res) {
         const userId = req.user.id;
@@ -2072,7 +2075,8 @@ class OrderController {
             // }
 
             const emailQueue = require('../config/emailQueue');
-            await emailQueue.add({
+            await resend.emails.send({
+                from: 'onboarding@resend.dev',
                 to: customerEmail,
                 subject: `Xác nhận đơn hàng #${order.order_code}`,
                 html: htmlContent,
