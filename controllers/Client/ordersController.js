@@ -884,13 +884,26 @@ class OrderController {
 
             await t.commit();
 
-            await OrderController.sendOrderConfirmationEmail(
-                newOrder,
-                { name, phone },
-                products,
-                email,
-                new Date()
-            );
+            // await OrderController.sendOrderConfirmationEmail(
+            //     newOrder,
+            //     { name, phone },
+            //     products,
+            //     email,
+            //     new Date()
+            // );
+
+            try {
+                await OrderController.sendOrderConfirmationEmail(
+                    newOrder,
+                    { name, phone },
+                    products,
+                    email,
+                    new Date()
+                );
+            } catch (emailError) {
+                console.error('Lỗi gửi email (không ảnh hưởng đơn hàng):', emailError.message);
+                // Không throw — đơn hàng vẫn thành công
+            }
 
             return res.status(201).json({
                 success: true,
@@ -901,7 +914,10 @@ class OrderController {
                 },
             });
         } catch (error) {
-            await t.rollback();
+            // await t.rollback();
+            if (t && !t.finished) {
+                await t.rollback();
+            }
             return res.status(500).json({
                 success: false,
                 message: "Lỗi máy chủ khi tạo đơn hàng.",
