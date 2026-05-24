@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -55,8 +56,6 @@ cron.schedule('* * * * *', () => {
 cron.schedule('0 9 * * *', () => {
   notifyWishlistPromotions();
 });
-
-app.use(cors());
 
 require('./models/connectsModel');
 require('./controllers/Admin/cronJobController');
