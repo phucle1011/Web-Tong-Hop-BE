@@ -26,7 +26,7 @@ const webhookRoutes = require('./routes/webhookRoutes');
 app.use(cors({
   origin: 'https://web-tong-hop-fe.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: '*',
   credentials: true
 }));
 
