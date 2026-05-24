@@ -2058,17 +2058,29 @@ class OrderController {
         </html>
         `;
 
-            const mailOptions = {
-                from: `"Cửa hàng của bạn" <${process.env.EMAIL_USER}>`,
+            //     const mailOptions = {
+            //         from: `"Cửa hàng của bạn" <${process.env.EMAIL_USER}>`,
+            //         to: customerEmail,
+            //         subject: `Xác nhận đơn hàng #${order.order_code}`,
+            //         html: htmlContent,
+            //     };
+
+            //     await transporter.sendMail(mailOptions);
+            // } catch (error) {
+            //     console.error("Lỗi gửi email xác nhận đơn hàng:", error);
+            //     throw new Error("Không thể gửi email xác nhận đơn hàng.");
+            // }
+
+            const emailQueue = require('../config/emailQueue');
+            await emailQueue.add({
                 to: customerEmail,
                 subject: `Xác nhận đơn hàng #${order.order_code}`,
                 html: htmlContent,
-            };
+            });
 
-            await transporter.sendMail(mailOptions);
         } catch (error) {
             console.error("Lỗi gửi email xác nhận đơn hàng:", error);
-            throw new Error("Không thể gửi email xác nhận đơn hàng.");
+            // ✅ Bỏ throw — lỗi email không crash server
         }
     }
 

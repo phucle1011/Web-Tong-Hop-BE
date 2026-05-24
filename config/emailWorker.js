@@ -7,12 +7,15 @@ emailQueue.process(async (job, done) => {
 
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,      // ✅ đổi sang 465
+      secure: true,   // ✅ true cho port 465
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      tls: {
+        rejectUnauthorized: false  // ✅ tránh lỗi cert trên Render
+      }
     });
 
     await transporter.sendMail({
