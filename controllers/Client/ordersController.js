@@ -1846,13 +1846,7 @@ class OrderController {
         currentDateTime
     ) {
         try {
-            let transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
-                },
-            });
+            console.log('📧 Bắt đầu gửi email đến:', customerEmail);
 
             const currentDateTimeUTC = new Date();
             const formattedDate = currentDateTimeUTC.toLocaleString("vi-VN", {
@@ -2074,16 +2068,17 @@ class OrderController {
             //     throw new Error("Không thể gửi email xác nhận đơn hàng.");
             // }
 
-            await resend.emails.send({
+            console.log('📧 Đang gọi Resend API...'); // ✅ thêm
+            const result = await resend.emails.send({
                 from: 'onboarding@resend.dev',
                 to: customerEmail,
                 subject: `Xác nhận đơn hàng #${order.order_code}`,
                 html: htmlContent,
             });
+            console.log('✅ Email gửi thành công:', result); // ✅ thêm
 
         } catch (error) {
-            console.error("Lỗi gửi email xác nhận đơn hàng:", error);
-            // ✅ Bỏ throw — lỗi email không crash server
+            console.error("❌ Lỗi gửi email xác nhận đơn hàng:", error);
         }
     }
 
