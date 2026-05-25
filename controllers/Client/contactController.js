@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const { Resend } = require('resend'); 
+const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 class ContactController {
@@ -12,7 +12,7 @@ class ContactController {
 
     try {
       await resend.emails.send({
-        from: 'noreply@phucle10112005.id.vn',
+        from: 'Công Ty Trân Hương <noreply@phucle10112005.id.vn>',
         to: process.env.EMAIL_USER,
         replyTo: email,
         subject: subject,
@@ -41,63 +41,33 @@ class ContactController {
 
 
   static async sendFaqEmail(req, res) {
-   const { first_name, email, message, subject } = req.body;
+    const { first_name, email, message, subject } = req.body;
 
     if (!first_name || !email || !message) {
       return res.status(400).json({ error: "Vui lòng điền đầy đủ thông tin." });
     }
 
     try {
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        tls: { rejectUnauthorized: false }
-      });
-
-      const mailOptions = {
-        from: `"TRANHUONG Support" <${process.env.EMAIL_USER}>`,
+      await resend.emails.send({
+        from: 'Công Ty Trân Hương <noreply@phucle10112005.id.vn>',
         to: process.env.EMAIL_USER,
         replyTo: email,
         subject: `Câu hỏi từ khách hàng: ${first_name} - ${subject || "Không có tiêu đề"}`,
         html: `
-    <table style="width:100%; max-width:600px; font-family: Arial, sans-serif; border:1px solid #ddd; border-radius:8px; background:#f9f9f9; padding:20px; margin:auto;">
-      <tr>
-        <td style="border-bottom:2px solid #3498db; padding-bottom:10px;">
+      <table style="width:100%; max-width:600px; font-family: Arial, sans-serif; border:1px solid #ddd; border-radius:8px; background:#f9f9f9; padding:20px; margin:auto;">
+        <tr><td style="border-bottom:2px solid #3498db; padding-bottom:10px;">
           <h2 style="color:#2c3e50; margin:0;">Khách hàng gửi phản hồi đến TRANHUONG</h2>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0;">
-          <strong>Tiêu đề:</strong> ${subject || "Không có tiêu đề"}
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0;">
-          <strong>Họ tên:</strong> ${first_name}
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0;">
-          <strong>Email:</strong> <a href="mailto:${email}" style="color:#3498db; text-decoration:none;">${email}</a>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0;">
-          <strong>Nội dung phản hồi:</strong>
+        </td></tr>
+        <tr><td style="padding:10px 0;"><strong>Tiêu đề:</strong> ${subject || "Không có tiêu đề"}</td></tr>
+        <tr><td style="padding:10px 0;"><strong>Họ tên:</strong> ${first_name}</td></tr>
+        <tr><td style="padding:10px 0;"><strong>Email:</strong> <a href="mailto:${email}" style="color:#3498db;">${email}</a></td></tr>
+        <tr><td style="padding:10px 0;">
+          <strong>Nội dung:</strong>
           <div style="background:#fff; border:1px solid #ddd; padding:15px; border-radius:6px; white-space:pre-wrap;">${message}</div>
-        </td>
-      </tr>
-    </table>
-  `
-      };
-
-
-      await transporter.sendMail(mailOptions);
+        </td></tr>
+      </table>
+    `
+      });
       return res.status(200).json({ message: "Gửi thành công từ trang FAQ!" });
     } catch (error) {
       console.error("Lỗi gửi mail FAQ:", error);

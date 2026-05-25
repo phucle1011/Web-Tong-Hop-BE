@@ -2068,14 +2068,12 @@ class OrderController {
             //     throw new Error("Không thể gửi email xác nhận đơn hàng.");
             // }
 
-            console.log('📧 Đang gọi Resend API...'); // ✅ thêm
             const result = await resend.emails.send({
-                from: 'noreply@phucle10112005.id.vn',
+                from: 'Công Ty Trân Hương <noreply@phucle10112005.id.vn>',
                 to: customerEmail,
                 subject: `Xác nhận đơn hàng #${order.order_code}`,
                 html: htmlContent,
             });
-            console.log('✅ Email gửi thành công:', result); // ✅ thêm
 
         } catch (error) {
             console.error("❌ Lỗi gửi email xác nhận đơn hàng:", error);
