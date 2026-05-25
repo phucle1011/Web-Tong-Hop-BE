@@ -12,7 +12,7 @@ class ContactController {
 
     try {
       await resend.emails.send({
-        from: 'onboarding@resend.dev',
+        from: 'noreply@phucle10112005.id.vn',
         to: process.env.EMAIL_USER,
         replyTo: email,
         subject: subject,

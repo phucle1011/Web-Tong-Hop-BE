@@ -2070,7 +2070,7 @@ class OrderController {
 
             console.log('📧 Đang gọi Resend API...'); // ✅ thêm
             const result = await resend.emails.send({
-                from: 'onboarding@resend.dev',
+                from: 'noreply@phucle10112005.id.vn',
                 to: customerEmail,
                 subject: `Xác nhận đơn hàng #${order.order_code}`,
                 html: htmlContent,
