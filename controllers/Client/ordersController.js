@@ -2074,7 +2074,6 @@ class OrderController {
             //     throw new Error("Không thể gửi email xác nhận đơn hàng.");
             // }
 
-            const emailQueue = require('../config/emailQueue');
             await resend.emails.send({
                 from: 'onboarding@resend.dev',
                 to: customerEmail,
