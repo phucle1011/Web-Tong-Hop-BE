@@ -24,7 +24,11 @@ const attachUser = require('./services/attachUser');
 const webhookRoutes = require('./routes/webhookRoutes');
 
 app.use(cors({
-  origin: 'https://web-tong-hop-fe.vercel.app',
+  origin: [
+    "https://web-tong-hop-fe.vercel.app",
+    "https://www.phucle10112005.id.vn",
+    "https://phucle10112005.id.vn"
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: '*',
   credentials: true
@@ -96,7 +100,11 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: 'https://web-tong-hop-fe.vercel.app',
+    origin: [
+      "https://web-tong-hop-fe.vercel.app",
+      "https://www.phucle10112005.id.vn",
+      "https://phucle10112005.id.vn"
+    ],
     methods: ['GET', 'POST'],
     credentials: true
   },
