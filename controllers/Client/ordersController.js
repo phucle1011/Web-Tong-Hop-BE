@@ -296,16 +296,21 @@ class OrderController {
             const isOnlinePayment = ["vnpay", "momo"].includes(
                 order.payment_method?.toLowerCase()
             );
-            if (!isOnlinePayment) {
-                await OrderController.sendOrderCancellationEmail(
-                    order,
-                    user,
-                    user?.email || "no-reply@example.com",
-                    cancellation_reason
-                );
-            }
-
             await t.commit();
+
+            // ✅ Gửi email SAU khi commit
+            if (!isOnlinePayment) {
+                try {
+                    await OrderController.sendOrderCancellationEmail(
+                        order,
+                        user,
+                        user?.email || "no-reply@example.com",
+                        cancellation_reason
+                    );
+                } catch (emailError) {
+                    console.error('Lỗi gửi email hủy (không ảnh hưởng):', emailError.message);
+                }
+            }
 
             res.status(200).json({
                 status: 200,
@@ -572,17 +577,14 @@ class OrderController {
     </html>
     `;
 
-            const mailOptions = {
-                from: `"Cửa hàng của bạn" <${process.env.EMAIL_USER}>`,
+            await resend.emails.send({
+                from: 'Công Ty Trân Hương <noreply@phucle10112005.id.vn>',
                 to: customerEmail,
                 subject: `Hủy đơn hàng #${order.order_code}`,
                 html: htmlContent,
-            };
-
-            await transporter.sendMail(mailOptions);
+            });
         } catch (error) {
-            console.error("Lỗi gửi email hủy đơn hàng (chi tiết):", error);
-            throw new Error("Không thể gửi email hủy đơn hàng.");
+            console.error("Lỗi gửi email hủy đơn hàng:", error);
         }
     }
 
