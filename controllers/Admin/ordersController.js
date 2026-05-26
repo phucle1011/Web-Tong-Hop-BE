@@ -17,6 +17,9 @@ const sequelize = require('../../config/database');
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 class OrderController {
 
     static async get(req, res) {
