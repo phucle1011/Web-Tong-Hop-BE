@@ -1,26 +1,20 @@
 const UserModel = require('../../models/usersModel');
 const AddressModel = require('../../models/addressesModel');
-const nodemailer = require('nodemailer');
+
 const { getEmailTemplate } = require('../../utils/emailTemplate');
 const { Op } = require('sequelize');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (to, subject, htmlContent) => {
-  const mailOptions = {
-    from: `"TRANHUONG" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html: htmlContent
-  };
   try {
-    await transporter.sendMail(mailOptions);
+    await resend.emails.send({
+      from: 'Công Ty Trân Hương <noreply@phucle10112005.id.vn>',
+      to,
+      subject,
+      html: htmlContent
+    });
   } catch (error) {
     console.error("Lỗi gửi email:", error.message);
   }
