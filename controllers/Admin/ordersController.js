@@ -138,7 +138,7 @@ class OrderController {
                                     {
                                         model: ProductModel,
                                         as: 'product',
-                                        attributes: ['id', 'name','slug']
+                                        attributes: ['id', 'name', 'slug']
                                     },
                                     {
                                         model: VariantImageModel,
@@ -343,13 +343,6 @@ class OrderController {
         cancellationReason
     ) {
         try {
-            let transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
-                },
-            });
 
             const formattedDate = new Date().toLocaleString("vi-VN", {
                 timeZone: "Asia/Ho_Chi_Minh",
@@ -465,17 +458,16 @@ class OrderController {
         </html>
         `;
 
-            const mailOptions = {
-                from: `"Cửa hàng của bạn" <${process.env.EMAIL_USER}>`,
+            await resend.emails.send({
+                from: 'Công Ty Trân Hương <noreply@phucle10112005.id.vn>',
                 to: customerEmail,
                 subject: `Hủy đơn hàng #${order.order_code}`,
                 html: htmlContent,
-            };
+            });
 
-            await transporter.sendMail(mailOptions);
         } catch (error) {
-            console.error("Lỗi gửi email hủy đơn hàng (chi tiết):", error);
-            throw new Error("Không thể gửi email hủy đơn hàng.");
+            console.error("Lỗi gửi email hủy đơn hàng:", error);
+            // ✅ Không throw
         }
     }
 
