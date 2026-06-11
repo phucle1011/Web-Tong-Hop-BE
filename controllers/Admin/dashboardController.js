@@ -47,21 +47,22 @@ class DashboardController {
       const total_order = await OrderModel.count();
       const total_promotion = await PromotionModel.count();
 
-      const total_revenue_result = await OrderDetailModel.findOne({
+      const total_revenue_result = await OrderModel.findOne({
         attributes: [
-          [Sequelize.fn('SUM', Sequelize.literal('price * quantity')), 'totalRevenue']
+          [Sequelize.fn('SUM', Sequelize.literal(
+            `(SELECT COALESCE(SUM(od.price * od.quantity), 0) 
+        FROM order_details od 
+        WHERE od.order_id = \`order\`.\`id\`)
+      - COALESCE(\`order\`.\`discount_amount\`, 0)
+      - COALESCE(\`order\`.\`special_discount_amount\`, 0)`
+          )), 'totalRevenue']
         ],
-        include: [
-          {
-            model: OrderModel,
-            as: 'order',
-            where: { status: 'completed' },
-            attributes: [],
-          },
-        ],
+        where: { status: 'completed' },
         raw: true,
       });
       const orderRevenueTotal = parseFloat(total_revenue_result?.totalRevenue || 0);
+
+      // const orderRevenueTotal = parseFloat(total_revenue_result?.totalRevenue || 0);
 
       const now = new Date();
 
@@ -78,14 +79,20 @@ class DashboardController {
       const endOfLastYear = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
 
       async function getRevenueByDateRange(startDate, endDate) {
-        const result = await OrderDetailModel.findOne({
-          attributes: [[Sequelize.fn('SUM', Sequelize.literal('price * quantity')), 'revenue']],
-          include: [{
-            model: OrderModel,
-            as: 'order',
-            where: { status: 'completed', created_at: { [Op.between]: [startDate, endDate] } },
-            attributes: [],
-          }],
+        const result = await OrderModel.findOne({
+          attributes: [
+            [Sequelize.fn('SUM', Sequelize.literal(
+              `(SELECT COALESCE(SUM(od.price * od.quantity), 0) 
+          FROM order_details od 
+          WHERE od.order_id = \`order\`.\`id\`)
+        - COALESCE(\`order\`.\`discount_amount\`, 0)
+        - COALESCE(\`order\`.\`special_discount_amount\`, 0)`
+            )), 'revenue']
+          ],
+          where: {
+            status: 'completed',
+            created_at: { [Op.between]: [startDate, endDate] }
+          },
           raw: true,
         });
         return parseFloat(result?.revenue || 0);
@@ -118,6 +125,7 @@ class DashboardController {
         ],
         group: ['product_variant_id', 'variant.id', 'variant->product.id'],
         order: [[Sequelize.literal('totalSold'), 'DESC']],
+
         raw: true,
         nest: true,
       });
