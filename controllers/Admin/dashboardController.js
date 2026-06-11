@@ -78,14 +78,16 @@ class DashboardController {
       const endOfLastYear = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
 
       async function getRevenueByDateRange(startDate, endDate) {
-        const result = await OrderDetailModel.findOne({
-          attributes: [[Sequelize.fn('SUM', Sequelize.literal('price * quantity')), 'revenue']],
-          include: [{
-            model: OrderModel,
-            as: 'order',
-            where: { status: 'completed', created_at: { [Op.between]: [startDate, endDate] } },
-            attributes: [],
-          }],
+        const result = await OrderModel.findOne({
+          attributes: [[Sequelize.fn('SUM', Sequelize.literal(
+            `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`orders\`.\`id\`)
+      - COALESCE(\`orders\`.\`discount_amount\`, 0)
+      - COALESCE(\`orders\`.\`special_discount_amount\`, 0)`
+          )), 'revenue']],
+          where: {
+            status: 'completed',
+            updated_at: { [Op.between]: [startDate, endDate] }
+          },
           raw: true,
         });
         return parseFloat(result?.revenue || 0);
@@ -178,7 +180,7 @@ class DashboardController {
             as: 'order',
             where: {
               status: 'completed',
-              created_at: { [Op.between]: [startDate, endDate] }
+              updated_at: { [Op.between]: [startDate, endDate] }
             },
             attributes: [],
           }
@@ -234,7 +236,7 @@ class DashboardController {
             as: 'order',
             where: {
               status: 'completed',
-              created_at: { [Op.between]: [startDate, endDate] }
+              updated_at: { [Op.between]: [startDate, endDate] }
             },
             attributes: [],
           }
