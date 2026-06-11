@@ -384,7 +384,7 @@ class DashboardController {
       if (from && to) {
         const startDate = new Date(from);
         const endDate = new Date(to); endDate.setHours(23, 59, 59, 999);
-        whereOrderBase.created_at = { [Op.between]: [startDate, endDate] };
+        whereOrderBase.updated_at = { [Op.between]: [startDate, endDate] };
       }
 
       const totalCompleted = await OrderModel.count({ where: whereOrderBase });
