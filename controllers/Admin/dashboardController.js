@@ -52,9 +52,9 @@ class DashboardController {
           [Sequelize.fn('SUM', Sequelize.literal(
             `(SELECT COALESCE(SUM(od.price * od.quantity), 0) 
         FROM order_details od 
-        WHERE od.order_id = \`order\`.\`id\`)
-      - COALESCE(\`order\`.\`discount_amount\`, 0)
-      - COALESCE(\`order\`.\`special_discount_amount\`, 0)`
+        WHERE od.order_id = \`orders\`.\`id\`)
+      - COALESCE(\`orders\`.\`discount_amount\`, 0)
+      - COALESCE(\`orders\`.\`special_discount_amount\`, 0)`
           )), 'totalRevenue']
         ],
         where: { status: 'completed' },
@@ -84,9 +84,9 @@ class DashboardController {
             [Sequelize.fn('SUM', Sequelize.literal(
               `(SELECT COALESCE(SUM(od.price * od.quantity), 0) 
           FROM order_details od 
-          WHERE od.order_id = \`order\`.\`id\`)
-        - COALESCE(\`order\`.\`discount_amount\`, 0)
-        - COALESCE(\`order\`.\`special_discount_amount\`, 0)`
+          WHERE od.order_id = \`orders\`.\`id\`)
+        - COALESCE(\`orders\`.\`discount_amount\`, 0)
+        - COALESCE(\`orders\`.\`special_discount_amount\`, 0)`
             )), 'revenue']
           ],
           where: {
@@ -179,9 +179,9 @@ class DashboardController {
         attributes: [
           [Sequelize.fn('MONTH', Sequelize.col('created_at')), 'month'],
           [Sequelize.fn('SUM', Sequelize.literal(
-            `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`order\`.\`id\`)
-      - COALESCE(\`order\`.\`discount_amount\`, 0)
-      - COALESCE(\`order\`.\`special_discount_amount\`, 0)`
+            `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`orders\`.\`id\`)
+      - COALESCE(\`orders\`.\`discount_amount\`, 0)
+      - COALESCE(\`orders\`.\`special_discount_amount\`, 0)`
           )), 'revenue'],
         ],
         where: {
@@ -232,9 +232,9 @@ class DashboardController {
         attributes: [
           [Sequelize.fn('DAY', Sequelize.col('created_at')), 'day'],
           [Sequelize.fn('SUM', Sequelize.literal(
-            `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`order\`.\`id\`)
-      - COALESCE(\`order\`.\`discount_amount\`, 0)
-      - COALESCE(\`order\`.\`special_discount_amount\`, 0)`
+            `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`orders\`.\`id\`)
+      - COALESCE(\`orders\`.\`discount_amount\`, 0)
+      - COALESCE(\`orders\`.\`special_discount_amount\`, 0)`
           )), 'revenue'],
         ],
         where: {
@@ -279,9 +279,9 @@ class DashboardController {
         attributes: [
           [Sequelize.fn('DATE', Sequelize.col('created_at')), 'date'],
           [Sequelize.fn('SUM', Sequelize.literal(
-            `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`order\`.\`id\`)
-      - COALESCE(\`order\`.\`discount_amount\`, 0)
-      - COALESCE(\`order\`.\`special_discount_amount\`, 0)`
+            `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`orders\`.\`id\`)
+      - COALESCE(\`orders\`.\`discount_amount\`, 0)
+      - COALESCE(\`orders\`.\`special_discount_amount\`, 0)`
           )), 'revenue'],
         ],
         where: {
