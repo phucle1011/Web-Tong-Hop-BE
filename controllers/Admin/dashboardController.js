@@ -415,22 +415,29 @@ class DashboardController {
         (Number(discountRow?.discountSum) || 0) +
         (Number(discountRow?.specialDiscountSum) || 0);
 
-      const revenueWithPromoRow = await OrderDetailModel.findOne({
-        attributes: [[Sequelize.fn('SUM', Sequelize.literal('price * quantity')), 'revenue']],
-        include: [{ model: OrderModel, as: 'order', where: withPromoWhere, attributes: [] }],
+      // THÀNH
+      const revenueWithPromoRow = await OrderModel.findOne({
+        attributes: [[Sequelize.fn('SUM', Sequelize.literal(
+          `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`orders\`.\`id\`)
+    - COALESCE(\`orders\`.\`discount_amount\`, 0)
+    - COALESCE(\`orders\`.\`special_discount_amount\`, 0)`
+        )), 'revenue']],
+        where: withPromoWhere,
         raw: true
       });
 
-      const revenueWithoutPromoRow = await OrderDetailModel.findOne({
-        attributes: [[Sequelize.fn('SUM', Sequelize.literal('price * quantity')), 'revenue']],
-        include: [{ model: OrderModel, as: 'order', where: withoutPromoWhere, attributes: [] }],
+      const revenueWithoutPromoRow = await OrderModel.findOne({
+        attributes: [[Sequelize.fn('SUM', Sequelize.literal(
+          `(SELECT COALESCE(SUM(od.price * od.quantity), 0) FROM order_details od WHERE od.order_id = \`orders\`.\`id\`)
+    - COALESCE(\`orders\`.\`discount_amount\`, 0)
+    - COALESCE(\`orders\`.\`special_discount_amount\`, 0)`
+        )), 'revenue']],
+        where: withoutPromoWhere,
         raw: true
       });
 
-      const revenueWithPromoRaw = Number(revenueWithPromoRow?.revenue) || 0;
+      const revenueWithPromo = Number(revenueWithPromoRow?.revenue) || 0;   // bỏ - totalDiscount
       const revenueWithoutPromo = Number(revenueWithoutPromoRow?.revenue) || 0;
-
-      const revenueWithPromo = revenueWithPromoRaw - totalDiscount;
 
       const AOVWithPromo = promoOrderCount ? Math.round(revenueWithPromo / promoOrderCount) : 0;
       const AOVWithoutPromo = ordersWithoutPromo ? Math.round(revenueWithoutPromo / ordersWithoutPromo) : 0;
